@@ -423,7 +423,7 @@ private Long ld;
                   generator "product-generator")
 @SequenceGenerator( name = "product _ generator",
                    sequenceName = "product_sequence_name",
-                   allocationSize = 1);
+                   allocationSize = 1)
 private Long id;
 ```
 The GenerationType.SEQUENCE is to generate primary key values and uses a database sequence to generate unique values. It requires additional select statements to get the next value from a database sequence. But this has no performance impact on most applications.
@@ -553,17 +553,16 @@ If we create user defined repository interface, then implementation class will b
 
 methods available in CurdRepository interface
 ==============================================
-1. Object save(T entity);  <S extends T> S save(S entity);
+1. Object save(T entity); ```<S extends T> S save(S entity);```
    To insert record into table
    Note : Same method will perform update operation also.
-
    As the name depicts, the save() method allows us to save an entity to the DB.
    Saving an entity can be performed with the CrudRepository.save(...) method. It persists or merges the given entity by using the
    underlying JPA EntityManager.
    If the entity has not yet been persisted, Spring Data JPA saves the entity with a call to the entityManager.persist(...) method.
    Otherwise, it calls the entityManager.merge(...) method.
 
-2. saveAll(Iterable1e<T> entities);  <S extends T> Iterable<S> saveAll(Iterable<S> entities);
+2. saveAll(Iterable1e<T> entities);  ```<S extends T> Iterable<S> saveAll(Iterable<S> entities);``` 
    To insert more than one record at a time we can go for this method.
    This method is taking Iterable as a parameter.Iterable is super interface Collection interface.
 
@@ -616,6 +615,7 @@ JpaRepository extending properties from below 2 interfaces
    1) PagingAndSortingRepository
    2) QueryByExampleExecutor 
 
+```java
 public interface JpaRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
 
 	List<T> findAll();
@@ -667,6 +667,8 @@ public interface JpaRepository<T, ID> extends PagingAndSortingRepository<T, ID>,
 	<S extends T> List<S> findAll(Example<S> example, Sort sort);
 }
 
+```
+
 
 SimpleJpaRepository is the handler implementation class for JpaRepository.
 
@@ -676,142 +678,145 @@ Pagination (I)
 
 JpaRepository extends Pagination. 
 
+Pagination allows the users to see a small portion of data at a time (a page), and sorting allows the users to view the data in a more organized way.
+Paging and sorting is mostly required when we are displaying domain data in
+tabular format in UI.
+
+
 Using JpaRepository we can perform 
    findAll(); // retrieve all records
    findAll(Sort); //retrieve all based on sort
    findAll(Pageable); //retrieve records based on page
 
-Sorting
-=======
+### Sorting
+Sorting consist of two fields - sortBy (single or multiple fields) and sortDir (sort direction can be ASC or DESC).
+
+```java
 List<ContactsMasterEntity> list = repository.findAll();
 List<ContactsMasterEntity> list = repository.findAll(Sort.by("column_name")).ascending());
 List<ContactsMasterEntity> list = repository.findAll(Sort.by("column_name")).descending());
+```
 
-Pagination
-==========
-What is Pagination?
+### Pagination
+What is Pagination? </br>
 The process of dividing total records into multiple pages is called pagination. 
 
-Why we need Pagination?
+Why we need Pagination? <br/>
 Using pagination we can display the data which is really required for user. 
 Using Pagination we can save server memory
-Application looks beautiful
-More no.of clicks will to application
-Example -
-   Gmail using pagination to display mails
-   Google search engine using pagination to display search results
+Application looks beautiful.
+Number of clicks will increase to application. <br>
+**Example** - <br>
+   Gmail using pagination to display mails <br>
+   Google search engine using pagination to display search results. <br>
    Flipkart loads products using Pagination
 
 How many ways we can implement Pagination?
-1. Server side Pagination 
-   In this approach we will retrieve data from database based on page number.
-   For every page load DB query will execute to retrieve page specific data
-   To retrieve page specific data from table we will use Row Number concept in SQL query 
+1. **Server side Pagination** 
+   In this approach we will retrieve data from database based on page number. <br>
+   For every page load DB query will execute to retrieve page specific data. <br>
+   To retrieve page specific data from table we will use Row Number concept in SQL query. <br>
+   **Advantages** 
+   1. Memory will be saved 
+   2. On demand execution  <br>
+
+   **Dis-Advantages**
+   1. For every page load db query will execute. 
    
-   Advantages 
-      Memory will be saved
-      On demand 
-   Dis-Advantages
-      For every page load db query will execute
-   Note: If table data is very huge then recommended to implement Server side pagination.
+    **If table data is very huge then recommended to implement Server side pagination.**
 
-2. Client side Pagination 
+2. **Client side Pagination** 
    In this approach we will retrieve all records from table at a time & will manage records display at client side.
-   There are several JS libraries are available to implement Client Side pagination. 
+   There are several JS libraries are available to implement Client Side pagination. <br>
+   
+   **Advantages**
+   1. Only one time query will execute to retrieve all records from table.
+   
+    **Dis-Advantages**
+   1. Server memory will be wasted 
+   
+   **If table data is less, then we can implement Client Side pagination.** 
 
-   Advantages
-      Only one time query will execute to retrieve all records from table
-   Dis-Advantages
-      Server memory will be wasted
-   Note: If table data is less then we can implement Client Side pagination. 
-
-Which type of pagination is recommended in project?
-When we are implementing pagination, first we should decide page size.
+Which type of pagination is recommended in project? <br>
+When we are implementing pagination, first we should decide the **page size**. <br>
 Page Size means the number of record should be displayed in a page.
-   Gmail page size 50 records
-   Google page size 10 records
-   Flipkart page size 17 records
+1. Gmail page size 50 records
+2. Google page size 10 records
+3. Flipkart page size 17 records
 
-We should identify how many records are available in table (using count function we can get this). 
-With Page Size and Total Records we should identify no.of pages required.
+We should identify how many records are available in table (using count function we can get this info). With Page Size & Total Records we should identify number of pages required.
 
-Note: We should not hard code total Pages required in pagination. Always we need to identify total pages based on page Size and total records available in table.
+**Example** 
+We have 5000 available records. Our page size is 15 records. We have to identify for how many pages we need in order to display 5000 records. 
 
-How to calculate total pages required in pagination ?
+**Note** 
+We should not hard code total pages required in pagination. We need to identify total pages based on page Size and total records available in table.
+
+How to calculate total pages required in pagination ? <br>
 pageSize = totalRecords/pageSize
 
-page size = 5
-TestCase-I -> totalRecords = 10 
-              pageSize = 10/5 = 2
-TestCase-2 -> totalRecords = 20 
-              pageSize = 20/5 = 4
-TestCase-3 -> totalRecords = 40 
-              pageSize = 40/5 = 8
-TestCase-4 -> totalRecords = 22 
-              pageSize = 22/5 = 4.4 pages [Formula failed] 
+**page size = 5** <br>
+**TestCase-1** -> totalRecords = 10, pageSize = 10/5 = 2 pages <br>
+**TestCase-2** -> totalRecords = 20, pageSize = 20/5 = 4 pages <br>
+**TestCase-3** -> totalRecords = 40, pageSize = 40/5 = 8 pages <br>
+**TestCase-4** -> totalRecords = 22, pageSize = 22/5 = 4.4 pages [Here Formula failed] 
 
-Modified formula 
-======================
-pageSize = (totalRecords/pageSize) + ((totalRecords%pageSize) > 0 ? 1 : 0);
+#### _Modified formula_ 
+**pageSize = (totalRecords/pageSize) + ((totalRecords%pageSize) > 0 ? 1 : 0);**
 
-pageSize = 5 
-TestCase-1 -> totalRecords = 10 
-              pageSize = (10/5) + ((10%5) > 0 ? 1 : 0)
-                              2        0   = 2 total pages 
- 
-TestCase-2 -> totalRecords = 15 
-              pageSize = (15/5) + ((15%5) > 0 ? 1 : 0)
-                              3        0   = 3 total pages 
+**pageSize = 5** <br> 
+**TestCase-1 ->** totalRecords = 10 , pageSize = (10/5) + ((10%5) > 0 ? 1 : 0) ; result = 2  + 0   =  2 total pages 
 
-TestCase-3 -> totalRecords = 45 
-              pageSize = (45/5) + ((45%5) > 0 ? 1 : 0)
-                              9        0   = 9 total pages
+**TestCase-2 ->** totalRecords = 15 , pageSize = (15/5) + ((15%5) > 0 ? 1 : 0) ; result = 3  + 0   = 3 total pages 
 
-TestCase-2 -> totalRecords = 22 
-              pageSize = (22/5) + ((22%5) > 0 ? 1 : 0)
-                              4        1   = 5 total pages
+**TestCase-3 ->** totalRecords = 45 , pageSize = (45/5) + ((45%5) > 0 ? 1 : 0) ; result = 9  + 0   = 9 total pages
 
-Working with Pagination using JpaRepository? 
-To read data from table using JpaRepository we have below methods
-findById(Serializable id)
-findAllById(Iterable<Serializable> ids)
-findAll()
+**TestCase-2 ->** totalRecords = 22 , pageSize = (22/5) + ((22%5) > 0 ? 1 : 0) ; result = 4  + 1   = 5 total pages
 
-below methods are providing by PagingAndSortingRepository  
+**Working with Pagination using JpaRepository?** <br>
+To read data from table using JpaRepository we have below methods 
+- findById(Serializable id)
+- findAllById(Iterable<Serializable> ids)
+- findAll()
+
+Below methods are providing by PagingAndSortingRepository  
 findAll(Sort s) -> to sort records
 findAll(Pageab1e p) -> retrieve page record
 
 When we are working with pagination in Data JPA we need to create Pageable object with below values
-      1) pageNo
-      2) PageSize
+1. pageNo
+2. PageSize
 
-Pageable p = PageRequest.of(pageNo, pageSize); 
-Note: pageNo will come dynamically from UI and pageSize is fixed value.
+Pageable p = PageRequest.of(pageNo, pageSize); <br>
 
-Page pageData = repository.findAll(Pageable p); 
-int totalPages = pageData.getTotalPages();
+**Note :** pageNo will come dynamically from UI & pageSize is fixed value. In Spring-data-jpa page number starts with 0. 
+
+Page pageData = repository.findAll(Pageable p); <br> 
+int totalPages = pageData.getTotalPages(); <br>
 pageData.getContent(); 
 
-================
+**PageRequest** is class acts as factory for creating the object of Pageable. PageRequest has a static factory method called of(int pageNo,int pageSize).
+
+```java
 interface JpaRepository extends PagingAndSortingRepository {}
 interface AccountRepository extends JpaRepository {}
 
+Pageable pageable = PageRequest.of(3, 10);
+Page<T> page = accountRepository.findAll(pageable);
+List<T> listEntity = page.getContent(); 
+listEntity.stream().forEach(System.out::println);
+
 accountRepository.findAll([Sort.by](http://sort.by/)("zip"));
-accountRepository.findAll(PageRequest.of(3, 10));
-PageRequest is class acts as factory for creating the object of Pageable.
+```
 
-We can use together Pageable and sort using below:
+
+
+We can use together Pageable & sort using below: <br>
 accountRepository.findAll(PageRequest.of(3, 10).sort([Sort.by](http://sort.by/)("zip")));
-
-==================
-
 
 
 PROJECTION in data-jpa 
 =======================
-
-
-
 Spring Data JPA Multi-Database Application
 ==========================================
 Spring Boot Data JPA by default supports connecting with One Database.
@@ -827,7 +832,6 @@ We need to define below objects(Beans) in order:
 By using Spring Java Configuration Style. 
 
 Db#1-PostgresDb
-=============
 cmd> psql -U postgres
 cmd> create database sample
 cmd> \l  #(list all dbs)
@@ -835,14 +839,10 @@ cmd> \c  #(connect to one db)
 cmd> \dt #(all tables)
 
 Db#2-MySQL
-========
 cmd> enter pwd : root
 cmd> create database abcd
 cmd> show databases
 cmd> use abcd
-
-
-
 
 Spring Boot and H2 in memory database
 =====================================
